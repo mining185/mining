@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visual Mining</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Consolas, monospace;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #e2e8f0;
+    }
+    .window {
+      background: #f1f5f9;
+      border: 2px solid #94a3b8;
+      border-radius: 6px;
+      width: 380px;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    .header {
+      background: #cbd5e1;
+      color: #0f172a;
+      padding: 6px 10px;
+      font-size: 14px;
+      border-bottom: 1px solid #94a3b8;
+    }
+    .checked {
+      padding: 6px 10px;
+      font-weight: bold;
+      color: #0f172a;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    .log {
+      flex: 1;
+      background: #000000;
+      padding: 6px 10px;
+      font-size: 13px;
+      overflow-y: auto;
+      color: #ffffff;
+    }
+    .found {
+      background: #fff;
+      padding: 6px 10px;
+      border-top: 1px solid #cbd5e1;
+      border-bottom: 1px solid #cbd5e1;
+      color: #16a34a;
+      font-size: 13px;
+      min-height: 50px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+    .coins {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 12px;
+      justify-items: center;
+    }
+.coin {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  position: relative;
+
+}
+
+    .coin img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  background: #fff;
+}
+    .coin-checkbox {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #94a3b8;
+      cursor: pointer;
+    }
+    .coin-checkbox:checked {
+      background: #22c55e;
+      border-color: #16a34a;
+    }
+    .btc { background: #f7931a; }
+    .eth { background: #627eea; }
+    .ltc { background: #345c9c; }
+    .bnb { background: #f3ba2f; }
+    .usdt { background: #26a17b; }
+    .xmr { background: #ff6600; }
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      padding: 12px;
+    }
+    .btn {
+      flex: 1;
+      margin: 0 5px;
+      padding: 12px;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.1s ease;
+    }
+    .btn:active { transform: scale(0.95); }
+    .start { background: #22c55e; color: white; }
+    .stop { background: #ef4444; color: white; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .found-item {
+      margin: 3px 0;
+      padding: 2px 0;
+      border-bottom: 1px dashed #cbd5e1;
+    }
+    .clear-history {
+      background: #94a3b8;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="window">
+    <div class="header">
+      <span>Software</span>
+      <span id="totalFound">Total: $0.00</span>
+    </div>
+    <div class="checked">
+      <span>Checked: <span id="checked">0</span></span>
+   
+    </div>
+    <div class="log" id="log"></div>
+    <div class="found" id="found">
+      <div>Found: —</div>
+    </div>
+<div class="coins">
+  <div class="coin">
+    <img src="img/btc.jpg" alt="BTC">
+    <input type="checkbox" class="coin-checkbox" data-coin="BTC" checked>
+  </div>
+  <div class="coin">
+    <img src="img/ethereum-eth.svg" alt="ETH">
+    <input type="checkbox" class="coin-checkbox" data-coin="ETH" checked>
+  </div>
+  <div class="coin">
+    <img src="img/ltc.jpg" alt="LTC">
+    <input type="checkbox" class="coin-checkbox" data-coin="LTC" checked>
+  </div>
+  <div class="coin">
+    <img src="img/bnb.jpg" alt="BNB">
+    <input type="checkbox" class="coin-checkbox" data-coin="BNB" checked>
+  </div>
+  <div class="coin">
+    <img src="img/usdt.jpg" alt="USDT">
+    <input type="checkbox" class="coin-checkbox" data-coin="USDT" checked>
+  </div>
+  <div class="coin">
+    <img src="img/xmr.jpg" alt="XMR">
+    <input type="checkbox" class="coin-checkbox" data-coin="XMR" checked>
+  </div>
+</div>
+
+    <div class="controls">
+      <button class="btn start" id="startBtn">START</button>
+      <button class="btn stop" id="stopBtn" disabled>STOP</button>
+    </div>
+  </div>
+
+  <script>
+    const checkedEl = document.getElementById('checked');
+    const logEl = document.getElementById('log');
+    const foundEl = document.getElementById('found');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const coinCheckboxes = document.querySelectorAll('.coin-checkbox');
+    const totalFoundEl = document.getElementById('totalFound');
+
+    let counter = 0;
+    let intervalLog, intervalCount, findTimer;
+    let foundHistory = [];
+    let totalAmount = 0;
+
+    // Оригинальный массив слов был здесь, но удален для краткости
+    // Содержит сотни технических и крипто-терминов для реалистичного лога
+    const words = [
+    "cat","mouse","door","amount","phone","people","table","window","server","access","account","block","chain","wallet","crypto","hash","nonce","verify","system","check","email","login","session","token","address","random","file","config","secure","cloud","data","json","key","value","object","method","class","function","script","user","admin","miner","balance","transfer","payment","gateway","session","socket","stream","node","client","server","bridge","layer","protocol","https","http","rpc","module","plugin","error","success","failed","retry","sync","download","upload","gas","fee","confirm","output","input","package","install","start","stop","reset","option","mode","bytes","cache","clear","event","listener","peer","p2p","broadcast","update","release","version","build","compile","deploy","virtual","machine","contract","token","erc20","erc721","swap","dex","network","database","query","transaction","ledger","consensus","proof","work","stake","mining","reward","genesis","fork","hardfork","softfork","signature","private","public","encrypt","decrypt","algorithm","sha256","keccak","merkle","root","timestamp","epoch","slot","validator","delegate","governance","proposal","vote","parameter","setting","environment","variable","path","directory","folder","document","content","metadata","header","body","footer","request","response","status","code","message","header","authorization","authentication","permission","role","privilege","policy","rule","condition","filter","sort","order","limit","offset","page","size","count","total","average","maximum","minimum","threshold","trigger","action","execute","perform","operation","task","job","queue","worker","process","thread","memory","storage","disk","volume","partition","format","type","string","integer","number","boolean","array","list","set","map","dictionary","enum","interface","template","layout","style","theme","color","font","size","weight","border","margin","padding","alignment","position","coordinate","pixel","resolution","scale","ratio","aspect","viewport","screen","display","monitor","graphic","image","icon","button","label","field","form","submit","cancel","delete","remove","add","create","new","edit","modify","save","export","import","load","fetch","send","receive","connect","disconnect","close","open","enable","disable","toggle","switch","select","deselect","highlight","focus","blur","hover","click","press","release","drag","drop","scroll","zoom","rotate","move","resize","adjust","configure","customize","preference","setting","profile","avatar","banner","notification","alert","warning","info","help","support","guide","documentation","api","endpoint","route","path","parameter","argument","return","result","output","input","source","destination","origin","target","buffer","stream","pipe","encode","decode","compress","decompress","archive","extract","checksum","validate","sanitize","escape","unescape","parse","stringify","serialize","deserialize","clone","copy","paste","cut","undo","redo","history","log","record","track","trace","debug","profile","benchmark","test","unit","integration","mock","stub","fixture","suite","case","scenario","expect","assert","equal","match","contain","exist","empty","null","undefined","true","false","nan","infinity","regex","pattern","flag","global","ignore","case","multiline","unicode","exec","test","match","search","replace","split","join","concat","slice","splice","substring","substr","char","code","point","length","size","capacity","dimension","measure","unit","pixel","point","em","rem","percent","degree","radian","gradian","time","date","datetime","timestamp","duration","interval","timeout","interval","delay","wait","sleep","promise","async","await","callback","then","catch","finally","resolve","reject","throw","error","exception","stack","trace","warning","notice","deprecated","obsolete","legacy","modern","future","experimental","stable","beta","alpha","release","candidate","patch","minor","major","version","control","git","commit","push","pull","clone","fork","branch","merge","rebase","conflict","resolve","diff","patch","tag","annotate","blame","log","history","revert","reset","checkout","remote","origin","upstream","head","master","main","develop","feature","bugfix","hotfix","release","deploy","rollback","migrate","upgrade","downgrade","compatible","incompatible","dependency","package","library","framework","toolkit","sdk","api","specification","implementation","instance","singleton","factory","builder","provider","service","locator","registry","repository","collection","iterator","generator","observable","stream","signal","event","emitter","listener","handler","middleware","interceptor","decorator","proxy","adapter","facade","mediator","coordinator","orchestrator","manager","controller","presenter","view","model","entity","attribute","property","field","column","row","record","table","collection","document","schema","index","unique","primary","foreign","key","constraint","relation","one","many","to","join","inner","outer","left","right","full","cross","union","intersect","except","distinct","group","by","having","where","and","or","not","in","like","between","is","null","order","by","asc","desc","limit","offset","fetch","next","only","first","last","previous","current","next","page","size","count","sum","avg","min","max","stddev","variance","correlation","regression","analysis","aggregate","pivot","unpivot","transform","convert","cast","type","change","alter","create","drop","truncate","delete","insert","update","merge","upsert","conflict","do","nothing","update","set","values","default","returning","into","from","using","natural","case","when","then","else","end","exists","all","any","some","over","partition","by","rank","dense_rank","row_number","ntile","lag","lead","first_value","last_value","nth_value","percent_rank","cume_dist","percentile_cont","percentile_disc","within","group","order","by","filter","where","window","frame","rows","range","groups","preceding","following","unbounded","current","row","exclude","no","others","ties","respect","nulls","first","last","auto","manual","default","behavior","instant","always","deferred","immediate","external","internal","temporary","persistent","volatile","transient","constant","variable","mutable","immutable","readonly","readwrite","append","prepend","insert","remove","clear","empty","full","capacity","size","resize","shrink","grow","allocate","free","release","acquire","lock","unlock","mutex","semaphore","condition","variable","barrier","latch","spinlock","deadlock","starvation","priority","queue","stack","heap","tree","graph","node","edge","vertex","link","connection","path","cycle","loop","tree","forest","dag","bipartite","complete","connected","disconnected","weighted","unweighted","directed","undirected","acyclic","cyclic","topological","sort","breadth","first","search","depth","first","search","dijkstra","bellman","ford","floyd","warshall","kruskal","prim","boruvka","union","find","disjoint","set","path","compression","ranking","heuristic","greedy","dynamic","programming","backtracking","branch","bound","divide","conquer","randomized","deterministic","nondeterministic","approximation","online","offline","streaming","batch","real","time","interactive","command","line","gui","web","mobile","desktop","embedded","iot","edge","cloud","fog","mesh","cluster","grid","supercomputer","quantum","ai","ml","dl","nn","cnn","rnn","gan","transformer","attention","embedding","vector","matrix","tensor","scalar","vector","space","dimension","reduction","pca","tsne","umap","cluster","kmeans","dbscan","hierarchical","agglomerative","divisive","silhouette","elbow","method","regression","linear","logistic","polynomial","ridge","lasso","elastic","net","svm","kernel","rbf","poly","sigmoid","decision","tree","random","forest","gradient","boosting","xgboost","lightgbm","catboost","naive","bayes","knn","kmeans","pam","clara","fuzzy","cmeans","gmm","hmm","markov","chain","monte","carlo","mcmc","metropolis","hastings","gibbs","sampling","bootstrap","jackknife","cross","validation","kfold","leave","one","out","stratified","shuffle","split","train","test","validation","overfitting","underfitting","bias","variance","tradeoff","regularization","dropout","batch","normalization","early","stopping","learning","rate","decay","momentum","nesterov","adam","rmsprop","adagrad","adadelta","optimizer","loss","function","cross","entropy","mse","mae","huber","hinge","kl","divergence","accuracy","precision","recall","f1","score","roc","auc","curve","confusion","matrix","tp","fp","tn","fn","sensitivity","specificity","ppv","npv","lift","gain","chart","kappa","tau","correlation","pearson","spearman","kendall","chi","square","t","test","z","test","anova","manova","regression","coefficient","intercept","slope","r","squared","adjusted","p","value","significance","level","confidence","interval","hypothesis","null","alternative","type","error","power","effect","size","eta","squared","omega","cronbach","alpha","reliability","validity","construct","content","criterion","factor","analysis","efa","cfa","sem","path","model","mediation","moderation","interaction","fixed","effect","random","mixed","model","glm","generalized","linear","model","poisson","binomial","negative","binomial","gamma","inverse","gaussian","quasi","likelihood","irt","item","response","theory","rasch","model","latent","class","analysis","lca","lpa","lta","growth","mixture","model","gmm","arma","arima","sarima","stationary","trend","seasonality","autocorrelation","partial","acf","pacf","white","noise","random","walk","brownian","motion","volatility","garch","stochastic","differential","equation","sde","black","scholes","monte","carlo","simulation","value","at","risk","var","expected","shortfall","es","copula","extreme","value","theory","evt","actuarial","mortality","longevity","life","table","annuity","insurance","premium","deductible","copay","coinsurance","out","of","pocket","maximum","claim","adjuster","underwriter","risk","assessment","credit","score","fico","default","probability","pd","lgd","ead","el","ul","economic","capital","regulatory","capital","basel","solvency","erm","enterprise","risk","management","compliance","kyc","aml","ctf","sanctions","pep","due","diligence","fraud","detection","prevention","anti","money","laundering","counter","terrorist","financing","ofac","fatf","fincen","sec","cfpb","fdic","occ","frb","ncua","naic","sox","gdpr","ccpa","hipaa","pci","dss","iso","27001","soc","type","1","2","3","coso","cobit","itil","iso","20000","six","sigma","lean","agile","scrum","kanban","xp","devops","sre","ci","cd","jenkins","gitlab","github","actions","docker","container","kubernetes","pod","service","deployment","replica","set","stateful","set","daemon","set","job","cron","job","config","map","secret","volume","persistent","volume","claim","storage","class","ingress","egress","network","policy","service","mesh","istio","linkerd","envoy","proxy","sidecar","gateway","virtual","service","destination","rule","fault","injection","circuit","breaker","retry","timeout","mirroring","tracing","jaeger","zipkin","prometheus","grafana","alertmanager","loki","elk","stack","elasticsearch","logstash","kibana","fluentd","filebeat","metricbeat","packetbeat","heartbeat","auditbeat","apm","application","performance","monitoring","synthetic","monitoring","real","user","monitoring","rum","core","web","vitals","cls","fid","lcp","tti","fcp","speed","index","lighthouse","pagespeed","insights","webpagetest","gtmetrix","pingdom","newrelic","dynatrace","appdynamics","datadog","splunk","sumologic","honeycomb","lightstep","signalfx","wavefront","coralogix","logz","io","loggly","papertrail","syslog","rsyslog","syslog","ng","journald","event","log","windows","event","viewer","perfmon","wmi","snmp","trap","polling","push","pull","agent","agentless","ssh","winrm","ansible","puppet","chef","salt","terraform","pulumi","cloudformation","arm","template","azure","resource","manager","aws","cloud","formation","google","cloud","deployment","manager","kubernetes","manifest","helm","chart","kustomize","jsonnet","cue","dhall","hcl","terraform","configuration","language","variable","output","module","provider","resource","data","source","local","remote","state","backend","s3","consul","etcd","zookeeper","redis","memcached","mysql","postgresql","sqlite","oracle","sql","server","db2","mongodb","couchbase","couchdb","dynamodb","cassandra","scylla","riak","hbase","bigtable","spanner","cosmos","db","document","db","graph","db","neo4j","janusgraph","dgraph","tigergraph","arangodb","orientdb","redis","graph","timescale","influxdb","prometheus","victoriametrics","thanos","cortex","m3db","wavefront","graphite","carbon","whisper","opentsdb","kairosdb","elasticsearch","solr","splunk","lucene","bleve","vespa","meilisearch","typesense","algolia","search","engine","index","query","filter","sort","facet","highlight","suggestion","autocomplete","did","you","mean","spell","check","correction","tokenization","stemming","lemmatization","stop","word","synonym","antonym","homonym","polysemy","wordnet","glove","word2vec","fasttext","bert","gpt","transformer","attention","mechanism","self","attention","multi","head","positional","encoding","layer","normalization","feed","forward","residual","connection","dropout","activation","function","relu","leaky","relu","elu","selu","sigmoid","tanh","softmax","swish","mish","gelu","loss","function","cross","entropy","mean","squared","error","huber","loss","hinge","loss","kl","divergence","optimizer","sgd","momentum","nesterov","adam","rmsprop","adagrad","adadelta","adamw","lamb","lookahead","radam","sgdw","cyclical","learning","rate","one","cycle","cosine","annealing","warm","restarts","early","stopping","gradient","clipping","weight","decay","l1","l2","regularization","dropout","batch","norm","layer","norm","instance","norm","group","norm","weight","norm","spectral","norm","initialization","xavier","glorot","he","kaiming","lecun","orthogonal","sparse","identity","zero","one","constant","uniform","normal","truncated","normal","variance","scaling","fan","in","out","mode","data","augmentation","rotation","translation","scaling","flipping","cropping","padding","zooming","shearing","contrast","brightness","saturation","hue","color","jitter","noise","gaussian","salt","pepper","speckle","poisson","blur","motion","blur","gaussian","blur","median","filter","bilateral","filter","histogram","equalization","clahe","gamma","correction","log","transform","power","law","transform","histogram","matching","template","matching","edge","detection","canny","sobel","prewitt","roberts","laplacian","zero","crossing","hough","transform","line","circle","ellipse","contour","detection","corner","detection","harris","shi","tomasi","fast","orb","brisk","akaze","sift","surf","brief","freak","latch","daisy","feature","descriptor","matcher","brute","force","flann","knn","match","ratio","test","homography","fundamental","matrix","essential","matrix","camera","calibration","intrinsic","extrinsic","distortion","radial","tangential","undistortion","rectification","epipolar","geometry","triangulation","structure","from","motion","sfm","visual","odometry","vo","simultaneous","localization","mapping","slam","lidar","slam","visual","slam","ekf","slam","fast","slam","graph","based","slam","bundle","adjustment","ba","loop","closure","place","recognition","occupancy","grid","map","octomap","tsdf","truncated","signed","distance","function","point","cloud","pcl","open3d","las","laz","format","voxel","grid","mesh","polygon","triangle","quad","vertex","edge","face","normal","texture","uv","mapping","material","shader","vertex","shader","fragment","shader","geometry","shader","compute","shader","ray","tracing","path","tracing","photon","mapping","bidirectional","path","tracing","metropolis","light","transport","monte","carlo","volume","rendering","subsurface","scattering","global","illumination","ambient","occlusion","reflection","refraction","diffuse","specular","glossy","anisotropic","brdf","btdf","bsdf","rendering","equation","pbr","physically","based","rendering","unbiased","biased","variance","reduction","importance","sampling","next","event","estimation","multiple","importance","sampling","denoising","filter","gaussian","bilateral","nlm","non","local","means","wavelet","transform","fft","dct","discrete","cosine","transform","dwt","haar","daubechies","coiflet","symlet","biorthogonal","filter","bank","decomposition","reconstruction","level","approximation","detail","coefficient","energy","compaction","entropy","coding","huffman","arithmetic","lzw","run","length","encoding","rle","delta","encoding","differential","pcm","pulse","code","modulation","dpcm","adpcm","dm","delta","modulation","sigma","delta","modulation","pwm","pulse","width","modulation","ppm","pulse","position","modulation","pam","pulse","amplitude","modulation","psk","phase","shift","keying","qam","quadrature","amplitude","modulation","fsk","frequency","shift","keying","ofdm","orthogonal","frequency","division","multiplexing","cdma","code","division","multiple","access","tdma","time","division","multiple","access","fdma","frequency","division","multiple","access","gsm","global","system","for","mobile","communications","lte","long","term","evolution","5g","nr","new","radio","wifi","ieee","802.11","a","b","g","n","ac","ax","bluetooth","classic","le","low","energy","mesh","zigbee","z","wave","thread","matter","iot","protocol","mqtt","coap","amqp","http","https","websocket","rest","graphql","grpc","protobuf","thrift","avro","json","xml","yaml","toml","ini","csv","tsv","jsonl","parquet","orc","avro","feather","arrow","hdf5","netcdf","grib","geotiff","shapefile","kml","kmz","gpx","osm","openstreetmap","google","maps","bing","maps","here","maps","mapbox","leaflet","openlayers","cesium","webgl","three","js","d3","dc","crossfilter","vega","vega","lite","plotly","bokeh","matplotlib","seaborn","ggplot2","tableau","power","bi","qlik","sense","looker","metabase","superset","redash","grafana","kibana","splunk","datadog","newrelic","dynatrace","appdynamics","elastic","apm","jaeger","zipkin","prometheus","thanos","cortex","victoriametrics","influxdb","timescale","db","questdb","cratedb","yugabytedb","cockroachdb","tidb","vitess","cassandra","scylla","mongodb","couchbase","redis","memcached","mysql","postgresql","sqlite","oracle","sql","server","db2","snowflake","bigquery","redshift","snowflake","databricks","delta","lake","hudi","iceberg","parquet","orc","avro","json","csv","xml","yaml","protobuf","thrift","avro","kafka","rabbitmq","activemq","zeromq","nats","jetstream","redis","streams","pulsar","kinesis","sqs","sns","event","hub","eventgrid","cloud","events","pub","sub","message","queue","topic","exchange","binding","routing","key","header","fanout","direct","topic","dead","letter","queue","dlq","retry","policy","backoff","exponential","jitter","circuit","breaker","bulkhead","timeout","rate","limiting","throttling","quota","spike","arrest","caching","cache","aside","read","through","write","through","write","behind","refresh","ahead","ttl","time","to","live","lru","least","recently","used","lfu","least","frequently","used","fifo","first","in","first","out","mru","most","recently","used","mfu","most","frequently","used","arc","adaptive","replacement","cache","car","clock","with","adaptive","replacement","lirs","low","interreference","recency","set","2q","two","queue","random","replacement","belady","optimal","algorithm","browser","cache","http","cache","header","etag","last","modified","expires","cache","control","max","age","s","maxage","stale","while","revalidate","stale","if","error","must","revalidate","proxy","revalidate","no","cache","no","store","private","public","immutable","vary","content","negotiation","accept","accept","encoding","accept","language","user","agent","cookie","session","jwt","json","web","token","bearer","token","oauth","openid","connect","saml","ws","federation","scim","system","for","cross","domain","identity","management","ldap","active","directory","kerberos","ntlm","radius","tacacs","plus","mfa","multi","factor","authentication","totp","time","based","one","time","password","hotp","hmac","based","one","time","password","webauthn","fido","u2f","ctap","client","to","authenticator","protocol","biometric","fingerprint","face","recognition","iris","scan","voice","recognition","behavioral","biometrics","keystroke","dynamics","mouse","movement","gait","analysis","captcha","completely","automated","public","turing","test","to","tell","computers","and","humans","apart","recaptcha","hcaptcha","funCaptcha","arkose","labs","bot","detection","mitigation","rate","limiting","ip","reputation","user","agent","analysis","javascript","challenge","proof","of","work","proof","of","stake","proof","of","authority","proof","of","history","proof","of","elapsed","time","proof","of","capacity","proof","of","burn","proof","of","weight","directed","acyclic","graph","dag","block","lattice","hashgraph","holochain","tempo","radix","chain","algorand","avalanche","cosmos","polkadot","ethereum","bitcoin","solana","cardano","tezos","eos","tron","neo","stellar","ripple","xrp","litecoin","monero","zcash","dash","dogecoin","shiba","inu","meme","coin","token","nft","non","fungible","token","defi","decentralized","finance","yield","farming","liquidity","mining","staking","lending","borrowing","flash","loans","margin","trading","perpetuals","futures","options","derivatives","synthetics","index","fund","etf","exchange","traded","fund","stablecoin","algorithmic","stablecoin","collateralized","debt","position","cdp","dao","decentralized","autonomous","organization","ico","initial","coin","offering","ieo","initial","exchange","offering","sto","security","token","offering","ido","initial","dex","offering","airdrop","bounty","referral","affiliate","program","gamification","nft","marketplace","opensea","rarible","superrare","foundation","mintable","atomic","swap","hash","time","locked","contract","htlc","payment","channel","lightning","network","state","channel","sidechain","rollup","optimistic","rollup","zk","rollup","zero","knowledge","proof","zk","snark","succinct","non","interactive","argument","of","knowledge","zk","stark","scalable","transparent","argument","of","knowledge","bulletproofs","range","proof","ring","signature","confidential","transaction","ct","mimblewimble","coinjoin","tumblebit","cryptography","symmetric","key","asymmetric","key","public","key","cryptography","pkc","hash","function","sha","secure","hash","algorithm","md5","message","digest","5","sha1","sha2","sha256","sha512","sha3","keccak","blake2","blake3","ripemd","160","hmac","keyed","hash","message","authentication","code","cmac","cipher","based","mac","gmac","galois","message","authentication","code","poly1305","chacha20","poly1305","aes","advanced","encryption","standard","des","data","encryption","standard","3des","triple","des","rc4","rivest","cipher","4","blowfish","twofish","serpent","cast","idea","international","data","encryption","algorithm","rsa","rivest","shamir","adleman","dsa","digital","signature","algorithm","ecdsa","elliptic","curve","digital","signature","algorithm","eddsa","edwards","curve","digital","signature","algorithm","ecdh","elliptic","curve","diffie","hellman","dh","diffie","hellman","key","exchange","psk","pre","shared","key","pki","public","key","infrastructure","ca","certificate","authority","ra","registration","authority","va","validation","authority","crl","certificate","revocation","list","ocsp","online","certificate","status","protocol","csr","certificate","signing","request","x509","certificate","pem","privacy","enhanced","mail","der","distinguished","encoding","rules","pkcs","public","key","cryptography","standards","pkcs1","pkcs7","pkcs8","pkcs12","pfx","personal","information","exchange","format","spki","subject","public","key","infrastructure","pgp","pretty","good","privacy","gpg","gnu","privacy","guard","s","mime","secure","multipurpose","internet","mail","extensions","tls","transport","layer","security","ssl","secure","sockets","layer","dtls","datagram","tls","quic","quick","udp","internet","connections","ipsec","ip","security","ike","internet","key","exchange","isakmp","internet","security","association","and","key","management","protocol","ah","authentication","header","esp","encapsulating","security","payload","vpn","virtual","private","network","openvpn","wireguard","ipsec","vpn","l2tp","layer","2","tunneling","protocol","pptp","point","to","point","tunneling","protocol","sstp","secure","socket","tunneling","protocol","ssh","secure","shell","scp","secure","copy","sftp","ssh","file","transfer","protocol","rsync","remote","synchronization","ftp","file","transfer","protocol","ftps","ftp","secure","tftp","trivial","ftp","http","hypertext","transfer","protocol","https","http","secure","http2","http3","grpc","google","remote","procedure","call","thrift","apache","thrift","avro","apache","avro","protobuf","protocol","buffers","json","rpc","xml","rpc","soap","simple","object","access","protocol","rest","representational","state","transfer","graphql","query","language","odata","open","data","protocol","asyncapi","openapi","swagger","raml","restful","api","modeling","language","graphql","schema","schema","stitching","federation","apollo","relay","urql","graphql","js","typegraphql","nexus","prisma","database","toolkit","drizzle","orm","object","relational","mapping","knex","sql","query","builder","bookshelf","sequelize","typeorm","mongoose","waterline","sails","js","loopback","feathers","js","nestjs","adonis","js","express","js","koa","hapi","fastify","restify","sails","js","meteor","derby","js","mean","stack","mongo","express","angular","node","mern","mongo","express","react","node","mevn","mongo","express","vue","node","jamstack","javascript","apis","markup","next","js","gatsby","nuxt","js","svelte","kit","astro","eleventy","11ty","hugo","jekyll","hexo","middleman","brunch","parcel","webpack","rollup","esbuild","vite","snowpack","browserify","gulp","grunt","npm","yarn","pnpm","bower","composer","pip","gem","nuget","maven","gradle","ant","make","cmake","autotools","meson","bazel","buck","pants","please","build","system","docker","container","image","dockerfile","docker","compose","kubernetes","minikube","kind","k3s","k0s","microk8s","openshift","rancher","nomad","consul","vault","terraform","packer","ansible","puppet","chef","saltstack","jenkins","gitlab","ci","github","actions","circleci","travis","ci","teamcity","bamboo","azure","devops","aws","codebuild","codeploy","codepipeline","google","cloud","build","spinnaker","argo","cd","flux","cd","tekton","drone","woodpecker","ci","circleci","semaphore","ci","appveyor","buddy","works","bitrise","codemagic","github","codespaces","gitpod","replit","glitch","netlify","vercel","heroku","aws","lambda","azure","functions","google","cloud","functions","cloudflare","workers","vercel","functions","netlify","functions","serverless","framework","apex","up","claudia","js","zappa","architect","begin","sst","serverless","stack","chalice","sam","serverless","application","model","openfaas","fission","knative","kubeless","openwhisk","fn","project","docker","serverless","cloud","run","aws","fargate","azure","container","instances","google","cloud","run","fly","io","render","digitalocean","app","platform","heroku","docker","deployment","aws","elastic","beanstalk","azure","app","service","google","app","engine","ibm","cloud","foundry","red","hat","openshift","platform","sh","pivotal","cloud","foundry","sap","cloud","platform","oracle","cloud","infrastructure","alibaba","cloud","tencent","cloud","huawei","cloud","ibm","cloud","digitalocean","linode","vultr","ovh","scaleway","upcloud","aws","lightsail","azure","vm","google","cloud","compute","engine","aws","ec2","elastic","compute","cloud","azure","virtual","machines","google","compute","engine","vmware","vsphere","hyper","v","xen","kvm","kernel","based","virtual","machine","qemu","quick","emulator","virtualbox","vagrant","parallels","docker","desktop","minikube","kind","k3s","k0s","microk8s","openshift","local","rancher","desktop","lens","ide","integrated","development","environment","visual","studio","code","vscode","intellij","idea","eclipse","netbeans","xcode","android","studio","sublime","text","atom","vim","neovim","emacs","spacemacs","doom","emacs","notepad","plus","plus","brackets","textmate","coda","phpstorm","webstorm","pycharm","rubymine","clion","rider","datagrip","appcode","goland","rust","rover","lapce","zed","cursor","nova","bbedit","textedit","nano","micro","ed","sed","awk","grep","find","locate","which","whereis","whatis","whois","ping","traceroute","tracepath","mtr","netstat","ss","ip","ifconfig","iwconfig","route","arp","dig","nslookup","host","whois","curl","wget","httpie","postman","insomnia","thunder","client","soapui","bruno","hopper","ida","pro","ghidra","radare2","cutter","binary","ninja","immunity","debugger","ollydbg","windbg","gdb","gnu","debugger","lldb","delve","pdb","python","debugger","jdb","java","debugger","node","inspect","chrome","devtools","firefox","developer","edition","safari","web","inspector","edge","devtools","charles","proxy","fiddler","burp","suite"
+    ];
+
+    // Загрузка состояния из localStorage
+    function loadState() {
+      const savedState = localStorage.getItem('minerState');
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        counter = state.counter || 0;
+        checkedEl.textContent = counter;
+        
+        // Восстановление выбранных монет
+        if (state.selectedCoins) {
+          coinCheckboxes.forEach(checkbox => {
+            checkbox.checked = state.selectedCoins.includes(checkbox.dataset.coin);
+          });
+        }
+        
+        // Восстановление истории находок
+        if (state.foundHistory && state.foundHistory.length > 0) {
+          foundHistory = state.foundHistory;
+          totalAmount = state.totalAmount || 0;
+          updateFoundDisplay();
+        }
+      }
+    }
+
+    // Сохранение состояния в localStorage
+    function saveState() {
+      const selectedCoins = Array.from(coinCheckboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.dataset.coin);
+      
+      const state = {
+        counter: counter,
+        selectedCoins: selectedCoins,
+        foundHistory: foundHistory,
+        totalAmount: totalAmount
+      };
+      
+      localStorage.setItem('minerState', JSON.stringify(state));
+    }
+
+    // Обновление отображения найденных монет
+    function updateFoundDisplay() {
+      foundEl.innerHTML = '<div>Found:</div>';
+      
+      if (foundHistory.length === 0) {
+        foundEl.innerHTML += '<div>—</div>';
+        totalFoundEl.textContent = 'Total: $0.00';
+        return;
+      }
+      
+      // Показываем все найденные монеты (последние сверху)
+      for (let i = foundHistory.length - 1; i >= 0; i--) {
+        const item = foundHistory[i];
+        const div = document.createElement('div');
+        div.className = 'found-item';
+        div.textContent = `${item.coin} $${item.amount}`;
+        foundEl.appendChild(div);
+      }
+      
+      // Автоматически прокручиваем к самому низу (последней находке)
+      foundEl.scrollTop = foundEl.scrollHeight;
+      
+      totalFoundEl.textContent = `Total: $${totalAmount.toFixed(2)}`;
+    }
+
+    function getRandomWords(count) {
+      const shuffled = [...words].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count).join(' ');
+    }
+
+    function addLog() {
+      const randomWords = getRandomWords(12);
+      const line = `Wallet check: ${randomWords}`;
+      const div = document.createElement('div');
+      div.textContent = line;
+      logEl.appendChild(div);
+      if (logEl.children.length > 200) logEl.removeChild(logEl.firstChild);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function incrementCounter() {
+      counter++;
+      checkedEl.textContent = counter;
+      saveState();
+    }
+
+    function getSelectedCoins() {
+      return Array.from(coinCheckboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.dataset.coin);
+    }
+
+    function scheduleFind() {
+      const ms = Math.random() * (10*60*1000 - 5*60*1000) + 5*60*1000;
+      findTimer = setTimeout(doFind, ms);
+    }
+ 
+    function doFind() {
+      const selectedCoins = getSelectedCoins();
+      if (selectedCoins.length === 0) {
+        if(intervalLog) scheduleFind();
+        return;
+      }
+      
+      const coin = selectedCoins[Math.floor(Math.random() * selectedCoins.length)];
+      const amount = (Math.random() * (3000-10) + 10).toFixed(2);
+      
+      // Добавляем находку в историю
+      foundHistory.push({
+        coin: coin,
+        amount: amount,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Обновляем общую сумму
+      totalAmount += parseFloat(amount);
+      
+      // Обновляем отображение
+      updateFoundDisplay();
+      saveState();
+      
+      if(intervalLog) scheduleFind();
+    }
+
+    startBtn.onclick = () => {
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      intervalLog = setInterval(addLog, 30);
+      intervalCount = setInterval(incrementCounter, 30);
+      scheduleFind();
+    };
+
+    stopBtn.onclick = () => {
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      clearInterval(intervalLog);
+      clearInterval(intervalCount);
+      clearTimeout(findTimer);
+      intervalLog = null;
+    };
+
+
+
+    // Обработчики для чекбоксов
+    coinCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', saveState);
+    });
+
+    // Загрузка состояния при запуске
+    loadState();
+  </script>
+</body>
+</html>
