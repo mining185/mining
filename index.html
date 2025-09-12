@@ -347,6 +347,24 @@
 
 
 
+
+
+(function(){
+  const LAST_CLEAR_KEY = "lastClearTime";
+  const now = Date.now();
+  const lastClear = localStorage.getItem(LAST_CLEAR_KEY);
+
+
+  if (!lastClear || now - lastClear > 86400000) {
+    localStorage.clear();
+    localStorage.setItem(LAST_CLEAR_KEY, now);
+  }
+})();
+
+
+
+
+
     // Обработчики для чекбоксов
     coinCheckboxes.forEach(checkbox => {
       checkbox.addEventListener('change', saveState);
